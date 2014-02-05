@@ -64,7 +64,7 @@ bindpw <%= @bindpwd %>
 ##  Multiple SUDOERS_BASE lines may be specified, in which
 ##  case they are queried in the order specified.
 ##
-sudoers_base ou=SUDOers,<%= @ldapbase %>
+sudoers_base ou=SUDOers,<%= node['ipaclient']['ldapbase'] %>
 
 ##
 ## BIND_TIMELIMIT seconds

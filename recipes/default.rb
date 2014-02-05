@@ -42,8 +42,8 @@ template "/etc/sudo-ldap.conf" do
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
   bindpwd = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", nss_password)
   variables ({
-    bindpw: "#{bindpwd}"
-             })
+    :bindpwd => "#{bindpwd}"
+  })
 end
   
 template "/etc/hosts" do
@@ -53,7 +53,7 @@ template "/etc/hosts" do
   mode 0644
   hostname = node[:fqdn].split('.')[0]
   variables ({
-    hostname: "#{hostname}",
+    :hostname => "#{hostname}",
   })
 end
 
@@ -64,8 +64,7 @@ template "/usr/sbin/ipa-client-install" do
   group "root"
 end
 
-passwordpath = "#{node['ipaclient']['nsspasswordfile']}"
-template "#{passwordpath}" do
+template "#{node['ipaclient']['nsspasswordfile']}" do
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
   nss_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", nss_password)
   source "password.erb"
@@ -73,14 +72,12 @@ template "#{passwordpath}" do
   group "root"
   mode 0600
   variables ({
-    password: "#{nss_password}"
+    :password => "#{nss_password}"
 })
 end
 
 execute "certutil" do
-  # Set up the password file here
-  nsspasswordfile = node['ipaclient']['nsspasswordfile']
-  command "certutil -N -d /etc/pki/nssdb/ -f #{nsspasswordfile}"
+  command "certutil -N -d /etc/pki/nssdb/ -f #{node['ipaclient']['nsspasswordfile']}"
 end
 
 execute "client-install" do
