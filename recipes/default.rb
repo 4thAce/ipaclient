@@ -25,6 +25,7 @@ node.default['openssh']['server']['use_p_a_m'] = 'yes'
 node.default['openssh']['client']['gssapi_delegate_credentials'] = 'yes'
 node.default['openssh']['client']['gssapi_authentication'] = 'yes'
 include_recipe 'openssh'
+package "libnss3-tools"
 
 template "/etc/nsswitch.conf" do
   source "nsswitch.conf.erb"
