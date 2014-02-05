@@ -40,7 +40,7 @@ template "/etc/sudo-ldap.conf" do
   mode 0644
   SECRETPATH = node['ipaclient']['secretpath']
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
-  bindpwd = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", nss_password)
+  bindpwd = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", "nss_password")
   variables ({
     :bindpwd => "#{bindpwd}"
   })
@@ -66,7 +66,7 @@ end
 
 template "#{node['ipaclient']['nsspasswordfile']}" do
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
-  nss_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", nss_password)
+  nss_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", "nss_password")
   source "password.erb"
   owner "root"
   group "root"
@@ -84,7 +84,7 @@ execute "client-install" do
   # Set up the encrypted data bag
   SECRETPATH = node['ipaclient']['secretpath']
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
-  ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", admin_secret)
+  ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", "admin_secret")
   hostname = node[:fqdn].split('.')[0]
   command "ipa-client-install --server=#{hostname}.#{node['ipaclient']['domain']} --domain=#{node['ipaclient']['domain']} --realm=#{node['ipaclient']['realm']} --noac --enable-dns-updates --no-ntp --hostname=#{hostname}.#{node['ipaclient']['domain']} --mkhomedir --password=#{ipa_password} --principal=admin"
 end
