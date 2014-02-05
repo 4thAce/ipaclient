@@ -9,7 +9,7 @@
 ##  identity.  By default, most LDAP servers will allow anonymous
 ##  access.
 ##
-binddn uid=sudo,cn=sysaccounts,cn=etc,<%= ldapbase %>
+binddn uid=sudo,cn=sysaccounts,cn=etc,<%= node['ipaclient']['ldapbase'] %>
 
 ## BINDPW secret
 ##  The BINDPW parameter specifies the password to use when performing

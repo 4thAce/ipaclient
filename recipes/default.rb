@@ -41,9 +41,7 @@ template "/etc/sudo-ldap.conf" do
   SECRETPATH = node['ipaclient']['secretpath']
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
   bindpwd = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", nss_password)
-  base = "#{node['ipaclient']['ldapbase']}"
   variables ({
-    ldapbase: "#{base}",
     bindpw: "#{bindpwd}"
              })
 end
@@ -53,14 +51,10 @@ template "/etc/hosts" do
   owner "root"
   group "root"
   mode 0644
-  host = "#{node['ipaclient']['masterhostname']}"
-  ip = "#{node['ipaclient']['domain']}"
-  domain = "#{node['ipaclient']['domain']}"
+  hostname = node[:fqdn].split('.')[0]
   variables ({
-    masterhostname: "#{host}",
-    masterip: "#{ip}",
-    domain: "#{domain}"
-             })
+    hostname: "#{hostname}",
+  })
 end
 
 template "/usr/sbin/ipa-client-install" do
