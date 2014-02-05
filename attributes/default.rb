@@ -20,3 +20,7 @@
 default['ipaclient']['nsspasswordfile'] = "#{Chef::Config[:file_cache_path]}/password"
 default['ipaclient']['secretpath'] = "#{Chef::Config[:file_cache_path]}/adminsecret"
 default['ipaclient']['realm'] = 'CHIMPY.INTERNAL'
+default['ipaclient']['domain'] = 'chimpy.internal'
+default['ipaclient']['ldapbase'] = 'dc=chimpy,dc=internal'
+default['ipaclient']['masterip'] = '50.17.200.2'
+default['ipaclient']['masterhostname'] = 'ipamasterdev4'
