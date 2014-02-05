@@ -17,6 +17,11 @@
 # limitations under the License.
 #
 
+node.default['openssh']['server']['use_p_a_m'] = 'yes'
+node.default['openssh']['client']['gssapi_delegate_credentials'] = 'yes'
+node.default['openssh']['client']['gssapi_authentication'] = 'yes'
+include_recipe 'openssh'
+
 template "/etc/nsswitch.conf" do
   source "nsswitch.conf.erb"
   owner "root"
@@ -54,18 +59,29 @@ template "/usr/sbin/ipa-client-install" do
   group "root"
 end
 
-package "libnss3-tools"
-package "freeipa-client"
-package "sssd"
-package "openssh-server"
+template "#{node['ipaclient']['nsspasswordfile']" do
+  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
+  nss_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", nss_password)
+  source "password.erb"
+  owner "root"
+  group "root"
+  mode 0600
+  variables (
+    password: "#nss_password"
+  )
+end
 
 execute "certutil" do
   # Set up the password file here
+  nsspasswordfile = node['ipaclient']['nsspasswordfile']
   command "certutil -N -d /etc/pki/nssdb/ -f #{nsspasswordfile}"
 end
 
 execute "client-install" do
+  # Set up the encrypted data bag
+  SECRETPATH = node['ipaclient']['secretpath']
+  REALM = node['ipaclient']['realm']
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
-  ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapassword", pwd_secret)
+  ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", admin_secret)
   command "ipa-client-install --server=#{node[:fqdn]}.#{domain} --domain=#{domain} --realm=#{REALM} --noac --enable-dns-updates --no-ntp --hostname=#{node[:fqdn]} --mkhomedir --password=#{ipa_password} --principal=admin"
 end
