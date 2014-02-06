@@ -103,21 +103,34 @@ apt_repository "freeipa" do
   action :add
 end
 
+#package "openssh" do
+#  version "6.2p2"
+#  action :install
+#end
+
 package "sssd" do
   options "--force-yes"
   action :install
 end
 
-package "freeipa" do
+package "freeipa-client" do
+  options "--force-yes"
   action :install
 end
 
-package "openssh" do
-  action :install
+execute "client-uninstall" do
+  command "ipa-client-install --uninstall || /bin/true"
 end
 
-#execute "client-uninstall" do
-#end
+execute "clear-logs" do
+  command "/bin/rm /etc/ipa/default.conf"
+  only_if "test -f /etc/ipa/default.conf"
+end
+
+execute "clear-systemrestore" do
+  command "/bin/rm /var/lib/ipa-client/sysrestore/*"
+  only_if "test -f /var/lib/ipa-client/sysrestore/sysrestore.index"
+end
 
 execute "client-install" do
   # Set up the encrypted data bag
@@ -125,5 +138,5 @@ execute "client-install" do
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
   ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['admin_secret']
   hostname = "#{node[:fqdn]}".split('.')[0]
-  command "ipa-client-install --server=#{hostname}.#{node['ipaclient']['domain']} --domain=#{node['ipaclient']['domain']} --realm=#{node['ipaclient']['realm']} --noac --enable-dns-updates --no-ntp --hostname=#{hostname}.#{node['ipaclient']['domain']} --mkhomedir --password=#{ipa_password} --principal=admin"
+  command "ipa-client-install --server=#{node['ipaclient']['masterhostname']}.#{node['ipaclient']['domain']} --domain=#{node['ipaclient']['domain']} --realm=#{node['ipaclient']['realm']} --noac --enable-dns-updates --no-ntp --hostname=#{hostname}.#{node['ipaclient']['domain']} --mkhomedir --password=#{ipa_password} --principal=admin"
 end
