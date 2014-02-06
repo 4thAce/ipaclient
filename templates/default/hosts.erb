@@ -1,6 +1,6 @@
 127.0.0.1 localhost
-<%= node['ipaclient']['domain'] %>         <%= node['ipaclient']['masterhostname'] %>.<%= node['ipaclient']['domain'] %> <%= @masterhost %>
-<%= :ipaddress %>        <%= @hostname %>.<%= node['ipaclient']['domain'] %> <%= @hostname %>
+<%= node['ipaclient']['masterip'] %>         <%= node['ipaclient']['masterhostname'] %>.<%= node['ipaclient']['domain'] %> <%= @masterhost %>
+<%= node[:ipaddress] %>        <%= @hostname %>.<%= node['ipaclient']['domain'] %> <%= @hostname %>
 
 # The following lines are desirable for IPv6 capable hosts
 ::1 ip6-localhost ip6-loopback
