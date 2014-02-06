@@ -85,8 +85,6 @@ execute "certutil" do
   not_if "test -f /etc/pki/nssdb/cert8.db"
 end
 
-#package "python-nss"
-#package "python-sss"
 apt_repository "sssd" do
   uri "http://ppa.launchpad.net/freeipa/ppa/ubuntu"
   distribution "precise"
@@ -132,11 +130,19 @@ execute "clear-systemrestore" do
   only_if "test -f /var/lib/ipa-client/sysrestore/sysrestore.index"
 end
 
+execute "name-resolution" do
+  command "echo search #{node['ipaclient']['domain']} >> /etc/resolv.conf; echo nameserver #{node['ipaclient']['masterip']}  >> /etc/resolv.conf"
+  not_if "/bin/grep ${node['ipaclient']['masterip']} /etc/resolv.conf"
+end
+
+package "expect"
+
 execute "client-install" do
   # Set up the encrypted data bag
   SECRETPATH = node['ipaclient']['secretpath']
   pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
   ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['admin_secret']
   hostname = "#{node[:fqdn]}".split('.')[0]
+  # Need to run this under expect
   command "ipa-client-install --server=#{node['ipaclient']['masterhostname']}.#{node['ipaclient']['domain']} --domain=#{node['ipaclient']['domain']} --realm=#{node['ipaclient']['realm']} --noac --enable-dns-updates --no-ntp --hostname=#{hostname}.#{node['ipaclient']['domain']} --mkhomedir --password=#{ipa_password} --principal=admin"
 end
