@@ -18,27 +18,33 @@
 #
 
 package "libnss3-tools"
+
+Chef::Log.info("password file #{node['ipaclient']['nsspasswordfile']}")
+
+template "#{node['ipaclient']['nsspasswordfile']}" do
+#template "/srv/chef/file_store/password" do
+  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{node['ipaclient']['secretpath']}")
+  nss_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['nss_password']
+  source "password.erb"
+  owner "root"
+  group "root"
+  action :create
+  mode 0600
+  variables ({
+    :password => "#{nss_password}"
+})
+end
+
 template "/etc/hosts" do
   source "hosts.erb"
   owner "root"
   group "root"
+  action :create
   mode 0644
   hostname = "#{node[:fqdn]}".split('.')[0]
   variables ({
     :hostname => "#{hostname}",
   })
-end
-
-template "#{node['ipaclient']['nsspasswordfile']}" do
-  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
-  nss_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['nss_password']
-  source "password.erb"
-  owner "root"
-  group "root"
-  mode 0600
-  variables ({
-    :password => "#{nss_password}"
-})
 end
 
 remote_directory "/etc/pki/nssdb" do
@@ -110,10 +116,13 @@ execute "name-resolution" do
   not_if "/bin/grep ${node['ipaclient']['masterip']} /etc/resolv.conf"
 end
 
+execute "set-domain" do
+  command "domainname #{node['ipaclient']['domain']}"
+end
+
 execute "client-install" do
   # Set up the encrypted data bag
-  SECRETPATH = node['ipaclient']['secretpath']
-  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
+  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{node['ipaclient']['secretpath']}")
   ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['admin_secret']
   hostname = "#{node[:fqdn]}".split('.')[0]
   # Need to run this under expect
@@ -141,8 +150,7 @@ template "/etc/sudo-ldap.conf" do
   owner "root"
   group "root"
   mode 0644
-  SECRETPATH = node['ipaclient']['secretpath']
-  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
+  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{node['ipaclient']['secretpath']}")
   bindpwd = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['nss_password']
   variables ({
     :bindpwd => "#{bindpwd}"
@@ -150,7 +158,7 @@ template "/etc/sudo-ldap.conf" do
 end
   
 cookbook_file "mkhomedir" do
-  path "/usrshare/pam-configs"
+  path "/usr/share/pam-configs"
   action :create_if_missing
   mode 0644
 end
