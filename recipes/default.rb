@@ -17,32 +17,7 @@
 # limitations under the License.
 #
 
-node.default['openssh']['server']['use_p_a_m'] = 'yes'
-node.default['openssh']['client']['gssapi_delegate_credentials'] = 'yes'
-node.default['openssh']['client']['gssapi_authentication'] = 'yes'
-include_recipe 'openssh'
 package "libnss3-tools"
-
-template "/etc/nsswitch.conf" do
-  source "nsswitch.conf.erb"
-  owner "root"
-  group "root"
-  mode 0644
-end
-
-template "/etc/sudo-ldap.conf" do
-  source "sudo-ldap.conf.erb"
-  owner "root"
-  group "root"
-  mode 0644
-  SECRETPATH = node['ipaclient']['secretpath']
-  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
-  bindpwd = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['nss_password']
-  variables ({
-    :bindpwd => "#{bindpwd}"
-  })
-end
-  
 template "/etc/hosts" do
   source "hosts.erb"
   owner "root"
@@ -52,13 +27,6 @@ template "/etc/hosts" do
   variables ({
     :hostname => "#{hostname}",
   })
-end
-
-template "/usr/sbin/ipa-client-install" do
-  source "ipa-client-install.erb"
-  mode 0544
-  owner  "root"
-  group "root"
 end
 
 template "#{node['ipaclient']['nsspasswordfile']}" do
@@ -116,6 +84,13 @@ package "freeipa-client" do
   action :install
 end
 
+template "/usr/sbin/ipa-client-install" do
+  source "ipa-client-install.erb"
+  mode 0544
+  owner  "root"
+  group "root"
+end
+
 execute "client-uninstall" do
   command "ipa-client-install --uninstall || /bin/true"
 end
@@ -135,8 +110,6 @@ execute "name-resolution" do
   not_if "/bin/grep ${node['ipaclient']['masterip']} /etc/resolv.conf"
 end
 
-package "expect"
-
 execute "client-install" do
   # Set up the encrypted data bag
   SECRETPATH = node['ipaclient']['secretpath']
@@ -144,5 +117,40 @@ execute "client-install" do
   ipa_password = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['admin_secret']
   hostname = "#{node[:fqdn]}".split('.')[0]
   # Need to run this under expect
-  command "ipa-client-install --server=#{node['ipaclient']['masterhostname']}.#{node['ipaclient']['domain']} --domain=#{node['ipaclient']['domain']} --realm=#{node['ipaclient']['realm']} --noac --enable-dns-updates --no-ntp --hostname=#{hostname}.#{node['ipaclient']['domain']} --mkhomedir --password=#{ipa_password} --principal=admin"
+  command "yes 'yes'|ipa-client-install --server=#{node['ipaclient']['masterhostname']}.#{node['ipaclient']['domain']} --domain=#{node['ipaclient']['domain']} --realm=#{node['ipaclient']['realm']} --noac --enable-dns-updates --no-ntp --hostname=#{hostname}.#{node['ipaclient']['domain']} --mkhomedir --password=#{ipa_password} --principal=admin"
+end
+
+node.default['openssh']['server']['use_p_a_m'] = 'yes'
+node.default['openssh']['client']['gssapi_delegate_credentials'] = 'yes'
+node.default['openssh']['client']['gssapi_authentication'] = 'yes'
+include_recipe 'openssh'
+
+execute "sudo-ldap-install" do
+  command "export SUDO_FORCE_REMOVE=yes; apt-get install -y sudo-ldap; export SUDO_FORCE_REMOVE=no"
+end
+
+template "/etc/nsswitch.conf" do
+  source "nsswitch.conf.erb"
+  owner "root"
+  group "root"
+  mode 0644
+end
+
+template "/etc/sudo-ldap.conf" do
+  source "sudo-ldap.conf.erb"
+  owner "root"
+  group "root"
+  mode 0644
+  SECRETPATH = node['ipaclient']['secretpath']
+  pwd_secret = Chef::EncryptedDataBagItem.load_secret("#{SECRETPATH}")
+  bindpwd = Chef::EncryptedDataBagItem.load("passwords", "ipapasswords", pwd_secret)['nss_password']
+  variables ({
+    :bindpwd => "#{bindpwd}"
+  })
+end
+  
+cookbook_file "mkhomedir" do
+  path "/usrshare/pam-configs"
+  action :create_if_missing
+  mode 0644
 end
