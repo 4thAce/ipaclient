@@ -1,6 +1,6 @@
 #
 # Cookbook Name:: ipaclient
-# Recipe:: default
+# Recipe:: configure_ldap
 #
 # Copyright 2014, Infochimps, a CSC Big Data Business
 #

@@ -3,11 +3,6 @@ ipaclient CHANGELOG
 
 This file is used to list changes made in each version of the ipaclient cookbook.
 
-0.1.0
+0.1.3
 -----
-- [your_name] - Initial release of ipaclient
-
-- - -
-Check the [Markdown Syntax Guide](http://daringfireball.net/projects/markdown/syntax) for help with Markdown.
-
-The [Github Flavored Markdown page](http://github.github.com/github-flavored-markdown/) describes the differences between markdown on github and standard markdown.
+- [Rich Magahiz] - Initial release of ipaclient
