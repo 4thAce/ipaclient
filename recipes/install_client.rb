@@ -75,12 +75,6 @@ apt_repository "freeipa" do
   action :add
 end
 
-execute "apt-get-update" do
-  command "apt-get update"
-  ignore_failure true
-  action :nothing
-end
-
 #package "openssh" do
 #  version "6.2p2"
 #  action :install
