@@ -18,7 +18,8 @@
 #
 
 default['ipaclient']['nsspasswordfile'] = "#{Chef::Config[:file_cache_path]}/password"
-default['ipaclient']['secretpath'] = "#{Chef::Config[:file_cache_path]}/adminsecret"
+#default['ipaclient']['secretpath'] = "#{Chef::Config[:file_cache_path]}/adminsecret"
+default['ipaclient']['secretpath'] = "/tmp/adminsecret"
 default['ipaclient']['realm'] = 'CHIMPY.INTERNAL'
 default['ipaclient']['domain'] = 'chimpy.internal'
 default['ipaclient']['ldapbase'] = 'dc=chimpy,dc=internal'
